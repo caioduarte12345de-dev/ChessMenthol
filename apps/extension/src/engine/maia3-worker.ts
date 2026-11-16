@@ -4,7 +4,9 @@ import * as ort from 'onnxruntime-web';
 import { Maia3 } from 'maia3-js/web';
 
 const origin = self.location.origin;
-ort.env.wasm.wasmPaths = { wasm: `${origin}/ort/ort-wasm-simd-threaded.wasm` };
+// ORT expects a directory prefix or a map keyed by actual wasm filenames.
+// The old { wasm: path } key was ignored and prevented Maia initialization.
+ort.env.wasm.wasmPaths = `${origin}/ort/`;
 ort.env.wasm.numThreads = 1;
 
 type Key = 'purple' | 'green' | 'yellow' | 'red';
