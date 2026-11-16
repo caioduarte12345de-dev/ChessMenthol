@@ -45,18 +45,30 @@ export function makeWasmEngine(worker: Worker, timeoutMs = 10_000): Promise<UciE
   });
 }
 
-// Stockfish 18 "lite" (small NNUE) "single"-threaded build: the Plan-1 baseline —
+// Stockfish 19 full "single"-threaded build: the Plan-1 baseline —
 // no SharedArrayBuffer required, runs in Chrome and Firefox everywhere. Staged by
 // copy-engine.mjs (Step 5). Leading slash: browser.runtime.getURL resolves it
 // against the extension root, where WXT serves public/.
-const SF_WORKER_URL = '/engine/stockfish-18-lite-single.js';
+const SF_WORKER_URL = '/engine/stockfish-19-single.js';
+const SF_LITE_WORKER_URL = '/engine/stockfish-19-lite-single.js';
 
 /** Construct the real Stockfish worker from the web-accessible resource. */
-export function loadWasmEngine(): Promise<UciEngine> {
+export async function loadWasmEngine(): Promise<UciEngine> {
   // WXT's generated `PublicPath` type only covers entrypoint outputs (html/js
   // pages), not files copied into public/ by our own copy-engine.mjs script —
   // so the literal is asserted through the type rather than widened to `any`.
-  const url = browser.runtime.getURL(SF_WORKER_URL as PublicPath);
-  const worker = new Worker(url, { type: 'classic' });
-  return makeWasmEngine(worker);
+  // Full SF19 is ~94 MB and can exceed the original 10s UCI startup limit.
+  // Keep full strength when available; fall back to the much smaller SF19 lite
+  // only if full initialization fails, so analysis isn't permanently blank.
+  async function start(path: string, timeoutMs: number): Promise<UciEngine> {
+    const url = browser.runtime.getURL(path as PublicPath);
+    const worker = new Worker(url, { type: 'classic' });
+    return makeWasmEngine(worker, timeoutMs);
+  }
+  try {
+    return await start(SF_WORKER_URL, 30_000);
+  } catch (fullError) {
+    console.warn('Stockfish 19 full unavailable; falling back to lite:', fullError);
+    return start(SF_LITE_WORKER_URL, 15_000);
+  }
 }

@@ -1,0 +1,59 @@
+name: Build Brave V2 with Maia
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'feat/maia3-cinco-setas-brave'
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  brave-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve new dependencies and update lock
+        run: npm install --no-audit --no-fund
+      - name: Save updated lockfile to feature branch
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: lock Maia-3 and Stockfish 19 dependencies"
+            git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          fi
+      - name: Check extension TypeScript and Svelte
+        run: npm run check --workspace chessmenthol-extension
+      - name: Compile extension
+        run: npm run build --workspace chessmenthol-extension
+      - name: Verify bundled assets
+        run: |
+          test -s apps/extension/.output/chrome-mv3/manifest.json
+          test -s apps/extension/.output/chrome-mv3/models/maia3_5m.onnx
+          test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.wasm
+          test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.mjs
+          test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.jsep.mjs
+          test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.jsep.wasm
+          test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-single.wasm
+          test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-lite-single.wasm
+      - name: Headless browser smoke test (diagnostic)
+        continue-on-error: true
+        run: |
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install chromium
+          node apps/extension/scripts/smoke-brave.mjs
+      - name: Upload browser-ready extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChessMenthol-V2-Brave-5-Setas
+          path: apps/extension/.output/chrome-mv3/
+          if-no-files-found: error
