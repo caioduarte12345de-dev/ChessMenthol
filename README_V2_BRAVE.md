@@ -38,3 +38,10 @@ this release ready.
 - Colors can overlap when several profiles choose the same move.
 - The build and browser integration have not been validated in this session.
 - Use only for study and permitted engine-assisted play.
+
+## Automated build verification
+
+The first GitHub Actions extension build completed successfully and uploaded
+`ChessMenthol-V2-Brave-5-Setas` (workflow run 43792953990).
+This verifies bundling and compilation, not runtime inference or human Elo accuracy.
+The PR remains a draft until browser tests validate the five recommendations.
