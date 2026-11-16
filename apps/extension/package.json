@@ -7,15 +7,15 @@
     "postinstall": "wxt prepare",
     "copy-engine": "node scripts/copy-engine.mjs",
     "copy-vision-assets": "node scripts/copy-vision-assets.mjs",
-    "predev": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs",
-    "prebuild": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs",
+    "predev": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs && node scripts/copy-maia-assets.mjs",
+    "prebuild": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs && node scripts/copy-maia-assets.mjs",
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
-    "prezip": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs",
+    "prezip": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs && node scripts/copy-maia-assets.mjs",
     "zip": "wxt zip",
-    "prezip:firefox": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs",
+    "prezip:firefox": "node scripts/copy-engine.mjs && node scripts/copy-vision-assets.mjs && node scripts/copy-maia-assets.mjs",
     "zip:firefox": "wxt zip -b firefox",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run"
@@ -35,6 +35,7 @@
     "@lichess-org/chessground": "^10.1.1",
     "chessops": "^0.15.0",
     "onnxruntime-web": "^1.27.0",
-    "stockfish": "^18.0.8"
+    "stockfish": "^19.0.1",
+    "maia3-js": "^0.2.0"
   }
 }
