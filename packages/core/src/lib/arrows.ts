@@ -74,3 +74,35 @@ export function linesToShapes(
   }
   return shapes;
 }
+
+/** Maia-3 human profiles share the existing Chessground auto-shape renderer. */
+export interface HumanMoves {
+  purple?: string;
+  green?: string;
+  yellow?: string;
+  red?: string;
+}
+const UCI = /^[a-h][1-8][a-h][1-8][qrbn]?$/;
+export function linesToHumanShapes(
+  lines: ArrowLine[], show: boolean, humans: HumanMoves,
+): Shape[] {
+  if (!show) return [];
+  const output: Shape[] = [];
+  const best = lines[0]?.pv[0];
+  if (best && UCI.test(best)) {
+    output.push({ orig: best.slice(0, 2), dest: best.slice(2, 4), brush: 'paleBlue' });
+  }
+  const humanBrushes = [
+    ['purple', 'v2Purple', 9],
+    ['green', 'v2Green', 12],
+    ['yellow', 'v2Yellow', 15],
+    ['red', 'v2Red', 18],
+  ] as const;
+  for (const [key, brush, lineWidth] of humanBrushes) {
+    const move = humans[key];
+    if (move && UCI.test(move)) {
+      output.push({ orig: move.slice(0, 2), dest: move.slice(2, 4), brush, modifiers: { lineWidth } });
+    }
+  }
+  return output;
+}
