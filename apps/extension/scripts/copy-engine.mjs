@@ -27,6 +27,6 @@ mkdirSync(dest, { recursive: true });
 
 // The .js is emscripten glue that loads the sibling .wasm from the same dir, so
 // both must be staged together.
-const files = ['stockfish-19-single.js', 'stockfish-19-single.wasm'];
+const files = ['stockfish-19-single.js', 'stockfish-19-single.wasm', 'stockfish-19-lite-single.js', 'stockfish-19-lite-single.wasm'];
 for (const f of files) cpSync(join(src, f), join(dest, f));
 console.log(`[copy-engine] staged ${files.length} file(s) -> public/engine/`, files);
