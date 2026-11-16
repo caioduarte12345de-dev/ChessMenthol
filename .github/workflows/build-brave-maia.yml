@@ -42,6 +42,12 @@ jobs:
           test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.wasm
           test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-single.wasm
           test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-lite-single.wasm
+      - name: Headless browser smoke test (diagnostic)
+        continue-on-error: true
+        run: |
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install chromium
+          node apps/extension/scripts/smoke-brave.mjs
       - name: Upload browser-ready extension
         uses: actions/upload-artifact@v4
         with:
