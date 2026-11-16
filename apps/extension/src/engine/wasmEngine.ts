@@ -53,7 +53,7 @@ const SF_WORKER_URL = '/engine/stockfish-19-single.js';
 const SF_LITE_WORKER_URL = '/engine/stockfish-19-lite-single.js';
 
 /** Construct the real Stockfish worker from the web-accessible resource. */
-export function loadWasmEngine(): Promise<UciEngine> {
+export async function loadWasmEngine(): Promise<UciEngine> {
   // WXT's generated `PublicPath` type only covers entrypoint outputs (html/js
   // pages), not files copied into public/ by our own copy-engine.mjs script —
   // so the literal is asserted through the type rather than widened to `any`.
