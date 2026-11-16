@@ -1,6 +1,6 @@
 /** GitHub Actions only: integration smoke against the compiled MV3 extension.
  *  No user installation prerequisites. Records browser and worker errors.
- *  The baseline must render at least one arrow on its side-panel board.
+ *  The side-panel must render the Stockfish arrow AND four Maia-3 arrows.
  */
 import { chromium } from 'playwright';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -30,11 +30,13 @@ try {
   const analyze = page.locator('[data-testid="analyze"]');
   if ((await analyze.innerText()).trim() === 'Analyze') await analyze.click();
 
-  // Keep the test independent of exact shapes/CSS; Chessground renders paths.
+  // Each of the five unique brush keys must render its own Chessground path.
+  // Fail if Maia is unavailable even when Stockfish alone works.
   await page.waitForFunction(
-    () => document.querySelectorAll('[data-testid="board"] svg path').length > 0,
+    () => document.querySelectorAll('[data-testid="board"] svg path').length >= 5
+       || document.body.textContent?.includes('Maia-3 indisponível:'),
     undefined,
-    { timeout: 110000 },
+    { timeout: 150000 },
   );
   const count = await page.locator('[data-testid="board"] svg path').count();
   const status = await page.locator('[data-testid="arrow-status"]').allTextContents();
@@ -42,7 +44,10 @@ try {
   console.log('SMOKE: rendered SVG paths:', count);
   console.log('SMOKE: status:', JSON.stringify(status));
   console.log('SMOKE: ribbons:', JSON.stringify(maiaError));
-  if (count === 0) throw new Error('Chessground did not display a single arrow');
+  if (maiaError.some(x => x.includes('Maia-3 indisponível:'))) {
+    throw new Error('Maia failed during browser inference: ' + maiaError.join(' | '));
+  }
+  if (count < 5) throw new Error('Expected five arrow paths, got ' + count);
 } catch (err) {
   console.error('SMOKE FAILED:', err);
   console.error(messages.slice(-20).join('\n'));
