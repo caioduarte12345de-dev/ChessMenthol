@@ -45,11 +45,11 @@ export function makeWasmEngine(worker: Worker, timeoutMs = 10_000): Promise<UciE
   });
 }
 
-// Stockfish 18 "lite" (small NNUE) "single"-threaded build: the Plan-1 baseline —
+// Stockfish 19 full "single"-threaded build: the Plan-1 baseline —
 // no SharedArrayBuffer required, runs in Chrome and Firefox everywhere. Staged by
 // copy-engine.mjs (Step 5). Leading slash: browser.runtime.getURL resolves it
 // against the extension root, where WXT serves public/.
-const SF_WORKER_URL = '/engine/stockfish-18-lite-single.js';
+const SF_WORKER_URL = '/engine/stockfish-19-single.js';
 
 /** Construct the real Stockfish worker from the web-accessible resource. */
 export function loadWasmEngine(): Promise<UciEngine> {
