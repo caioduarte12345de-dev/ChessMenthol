@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { Chessground } from '@lichess-org/chessground';
   import { moveToUci, turnColor, legalDests, promotionPiece, lastMoveSquares } from '@chessmenthol/core/lib/board';
-  import { linesToShapes } from '@chessmenthol/core/lib/arrows';
+  import { linesToHumanShapes, type HumanMoves } from '@chessmenthol/core/lib/arrows';
   import { coordsToKey, pieceFromToken } from '@chessmenthol/core/lib/edit';
   import type { LineDto } from '@chessmenthol/core/lib/types';
   import '@lichess-org/chessground/assets/chessground.base.css';
@@ -22,6 +22,7 @@
    *  stale highlight after an external position change. */
   export let lastMove: string | null = null;
   export let lines: LineDto[] = [];
+  export let humanMoves: HumanMoves = {};
   export let showArrows = true;
   export let editing = false;
   export let selectedEditPiece: string | null = 'P';
@@ -85,7 +86,15 @@
             },
           },
         },
-        drawable: { enabled: true, visible: true, autoShapes: [] },
+        drawable: {
+          enabled: true, visible: true, autoShapes: [],
+          brushes: {
+            v2Purple: { key: 'p', color: '#A266DF', opacity: 0.82, lineWidth: 9 },
+            v2Green: { key: 'G', color: '#35C46C', opacity: 0.82, lineWidth: 12 },
+            v2Yellow: { key: 'Y', color: '#F0CB33', opacity: 0.84, lineWidth: 15 },
+            v2Red: { key: 'R', color: '#E65858', opacity: 0.84, lineWidth: 18 },
+          } as any,
+        },
         events: { select: (key: string) => editPlace(key) },
       });
     } catch (err) {
@@ -124,7 +133,7 @@
   // Arrows: recompute on lines / toggle / mode / turn change. Suppressed while
   // editing. turnColor(fen) gives the mover's POV so weaker-line widths read
   // White-POV evals correctly (Lichess parity).
-  $: if (cg) cg.setAutoShapes(linesToShapes(lines, showArrows && !editing, turnColor(fen)) as any);
+  $: if (cg) cg.setAutoShapes(linesToHumanShapes(lines, showArrows && !editing, humanMoves) as any);
   // Movable: legal-only for the side to move in normal play; free placement while editing.
   $: if (cg) cg.set({ movable: movableConfig(fen, editing) });
   // Drawing: in the editor right-click deletes pieces and clicks place them, so
