@@ -17,6 +17,8 @@ try {
     headless: true,
     args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
   });
+  context.on('requestfailed', req => messages.push('FAILED REQUEST ' + req.url() + ' :: ' + (req.failure()?.errorText ?? 'unknown')));
+  context.on('response', res => { if (res.status() >= 400) messages.push('HTTP ' + res.status() + ': ' + res.url()); });
   const worker = context.serviceWorkers()[0]
     ?? await context.waitForEvent('serviceworker', { timeout: 30000 });
   const id = new URL(worker.url()).host;
