@@ -33,6 +33,7 @@ try {
   // Keep the test independent of exact shapes/CSS; Chessground renders paths.
   await page.waitForFunction(
     () => document.querySelectorAll('[data-testid="board"] svg path').length > 0,
+    undefined,
     { timeout: 110000 },
   );
   const count = await page.locator('[data-testid="board"] svg path').count();
