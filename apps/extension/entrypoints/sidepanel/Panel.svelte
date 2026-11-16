@@ -104,7 +104,7 @@
       }
     }).catch((error) => {
       if (!destroyed && sequence === humanSequence && currentFen === fen && !controller.signal.aborted) {
-        maiaError = String(error).slice(0, 160);
+        maiaError = String(error).slice(0, 900);
         maiaProgress = 'erro';
       }
     });
