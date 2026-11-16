@@ -40,6 +40,7 @@ jobs:
           test -s apps/extension/.output/chrome-mv3/manifest.json
           test -s apps/extension/.output/chrome-mv3/models/maia3_5m.onnx
           test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.wasm
+          test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.mjs
           test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-single.wasm
           test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-lite-single.wasm
       - name: Headless browser smoke test (diagnostic)
