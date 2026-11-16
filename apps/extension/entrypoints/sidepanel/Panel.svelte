@@ -81,22 +81,31 @@
   let lastHumanFen = '';
   let humanSequence = 0;
   let maiaError = '';
+  let maiaProgress = 'carregando';
   $: if (currentFen !== lastHumanFen) {
     const fen = currentFen;
     lastHumanFen = fen;
     humanAbort?.abort();
     humanMoves = {};
     maiaError = '';
+    maiaProgress = 'carregando';
     const controller = new AbortController();
     humanAbort = controller;
     const sequence = ++humanSequence;
     void fetchHumanRecommendations(fen, controller.signal, (partial) => {
-      if (!destroyed && sequence === humanSequence && currentFen === fen) humanMoves = partial;
+      if (!destroyed && sequence === humanSequence && currentFen === fen) {
+        humanMoves = partial;
+        maiaProgress = `${Object.values(partial).filter(Boolean).length}/4`;
+      }
     }).then((result) => {
-      if (!destroyed && sequence === humanSequence && currentFen === fen) humanMoves = result;
+      if (!destroyed && sequence === humanSequence && currentFen === fen) {
+        humanMoves = result;
+        maiaProgress = `${Object.values(result).filter(Boolean).length}/4`;
+      }
     }).catch((error) => {
       if (!destroyed && sequence === humanSequence && currentFen === fen && !controller.signal.aborted) {
         maiaError = String(error).slice(0, 160);
+        maiaProgress = 'erro';
       }
     });
   }
@@ -215,6 +224,7 @@
   $: evalDto = $panelState?.eval ?? null;
   $: lines = $panelState?.lines ?? [];
   $: depth = $panelState?.depth ?? 0;
+  $: maiaMoveCount = Object.values(humanMoves).filter(Boolean).length;
   // visionStatus is written only by vision captures and never reset by set_fen, so gate it
   // on provenance: a no_board/unreadable card (or the low-confidence ribbon) from an earlier
   // screenshot must not linger over a later site/manual position.
@@ -250,6 +260,12 @@
     </div>
     {#if lowConfidence}<p class="ribbon" data-testid="low-confidence">Low-confidence read — double-check the pieces.</p>{/if}
 
+    {#if !$s.arrows}
+      <p class="ribbon" data-testid="arrow-status">Setas desativadas. Abra Configurações → Best-move arrows.</p>
+    {:else if !lines[0]?.pv?.[0] || maiaMoveCount < 4}
+      <p class="ribbon" data-testid="arrow-status">Setas: Stockfish {lines[0]?.pv?.[0] ? 'calculado' : (analyzing ? 'carregando/analisando' : 'parado')} · Maia-3 {maiaProgress}{maiaError ? ' — erro abaixo' : ''}</p>
+    {/if}
+    {#if $lastError && !maiaError}<p class="ribbon">Motor: {$lastError}</p>{/if}
     {#if maiaError}<p class="ribbon">Maia-3 indisponível: {maiaError}</p>{/if}
     <div class="tools">
       <span class="tool">
