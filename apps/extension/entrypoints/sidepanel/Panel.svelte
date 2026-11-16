@@ -1,5 +1,7 @@
 <script lang="ts">
   import Board from './components/Board.svelte';
+  import { fetchHumanRecommendations } from '../../src/lib/humanRecommendations';
+  import type { HumanMoves } from '@chessmenthol/core/lib/arrows';
   import EvalBar from './components/EvalBar.svelte';
   import Lines from './components/Lines.svelte';
   import { onMount, onDestroy } from 'svelte';
@@ -71,6 +73,33 @@
   $: currentPly = $panelState?.currentPly ?? 0;
   // Yellow last-move highlight from authoritative state so it follows the stepper.
   $: lastMoveUci = currentLastMoveUci(moveList, currentPly);
+
+  // Same authoritative board position as the original Stockfish panel.
+  // Cancel stale Maia requests without interrupting engine analysis.
+  let humanMoves: HumanMoves = {};
+  let humanAbort: AbortController | null = null;
+  let lastHumanFen = '';
+  let humanSequence = 0;
+  let maiaError = '';
+  $: if (currentFen !== lastHumanFen) {
+    const fen = currentFen;
+    lastHumanFen = fen;
+    humanAbort?.abort();
+    humanMoves = {};
+    maiaError = '';
+    const controller = new AbortController();
+    humanAbort = controller;
+    const sequence = ++humanSequence;
+    void fetchHumanRecommendations(fen, controller.signal, (partial) => {
+      if (!destroyed && sequence === humanSequence && currentFen === fen) humanMoves = partial;
+    }).then((result) => {
+      if (!destroyed && sequence === humanSequence && currentFen === fen) humanMoves = result;
+    }).catch((error) => {
+      if (!destroyed && sequence === humanSequence && currentFen === fen && !controller.signal.aborted) {
+        maiaError = String(error).slice(0, 160);
+      }
+    });
+  }
 
   // Re-send engine-affecting settings only when lines/time change (an arrows/toggle
   // flip must NOT restart the search).
@@ -181,7 +210,7 @@
       if ($s.liveSiteReading) await pullPosition();
     })();
   });
-  onDestroy(() => { destroyed = true; browser?.runtime?.onMessage?.removeListener?.(onMessage); unsubTab(); });
+  onDestroy(() => { humanAbort?.abort(); destroyed = true; browser?.runtime?.onMessage?.removeListener?.(onMessage); unsubTab(); });
 
   $: evalDto = $panelState?.eval ?? null;
   $: lines = $panelState?.lines ?? [];
@@ -216,11 +245,12 @@
 
     <div class="board-row">
       <EvalBar {evalDto} orientation={boardOrientation} />
-      <Board fen={currentFen} orientation={boardOrientation} {lines} showArrows={$s.arrows}
+      <Board fen={currentFen} orientation={boardOrientation} {lines} {humanMoves} showArrows={$s.arrows}
         onMove={onBoardMove} revertSignal={$errorSeq} lastMove={lastMoveUci} />
     </div>
     {#if lowConfidence}<p class="ribbon" data-testid="low-confidence">Low-confidence read — double-check the pieces.</p>{/if}
 
+    {#if maiaError}<p class="ribbon">Maia-3 indisponível: {maiaError}</p>{/if}
     <div class="tools">
       <span class="tool">
         <TurnToggle sideToMove={$panelState?.sideToMove ?? 'white'}
