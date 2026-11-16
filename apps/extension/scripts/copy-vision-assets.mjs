@@ -26,10 +26,13 @@ mkdirSync(join(PUB, 'models'), { recursive: true });
 copyFileSync(MODEL_SRC, join(PUB, 'models', 'pieces.onnx'));
 
 // 2. ORT runtime: exactly one wasm variant.
-const ORT_WASM = 'ort-wasm-simd-threaded.wasm';
-const ORT_SRC = join(pkgDir('onnxruntime-web'), 'dist', ORT_WASM);
-if (!existsSync(ORT_SRC)) { console.error(`[copy-vision-assets] missing ${ORT_SRC} — run npm install`); process.exit(1); }
+// ONNX Runtime 1.27 loads a matching ESM glue module (.mjs) dynamically
+// before the .wasm. Both must be shipped at the same origin and version.
+const ORT_ASSETS = ['ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.mjs'];
 mkdirSync(join(PUB, 'ort'), { recursive: true });
-copyFileSync(ORT_SRC, join(PUB, 'ort', ORT_WASM));
-
-console.log(`[copy-vision-assets] staged pieces.onnx + ${ORT_WASM} into public/`);
+for (const asset of ORT_ASSETS) {
+  const src = join(pkgDir('onnxruntime-web'), 'dist', asset);
+  if (!existsSync(src)) { console.error(`[copy-vision-assets] missing ${src} — run npm install`); process.exit(1); }
+  copyFileSync(src, join(PUB, 'ort', asset));
+}
+console.log(`[copy-vision-assets] staged pieces.onnx + ${ORT_ASSETS.join(', ')} into public/`);
