@@ -28,7 +28,10 @@ copyFileSync(MODEL_SRC, join(PUB, 'models', 'pieces.onnx'));
 // 2. ORT runtime: exactly one wasm variant.
 // ONNX Runtime 1.27 loads a matching ESM glue module (.mjs) dynamically
 // before the .wasm. Both must be shipped at the same origin and version.
-const ORT_ASSETS = ['ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.mjs'];
+const ORT_ASSETS = [
+  'ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.mjs',
+  'ort-wasm-simd-threaded.jsep.wasm', 'ort-wasm-simd-threaded.jsep.mjs',
+];
 mkdirSync(join(PUB, 'ort'), { recursive: true });
 for (const asset of ORT_ASSETS) {
   const src = join(pkgDir('onnxruntime-web'), 'dist', asset);
