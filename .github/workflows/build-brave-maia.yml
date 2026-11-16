@@ -31,6 +31,8 @@ jobs:
             git commit -m "chore: lock Maia-3 and Stockfish 19 dependencies"
             git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
           fi
+      - name: Check extension TypeScript and Svelte
+        run: npm run check --workspace chessmenthol-extension
       - name: Compile extension
         run: npm run build --workspace chessmenthol-extension
       - name: Verify bundled assets
@@ -39,6 +41,7 @@ jobs:
           test -s apps/extension/.output/chrome-mv3/models/maia3_5m.onnx
           test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.wasm
           test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-single.wasm
+          test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-lite-single.wasm
       - name: Upload browser-ready extension
         uses: actions/upload-artifact@v4
         with:
