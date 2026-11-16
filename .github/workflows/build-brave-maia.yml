@@ -1,0 +1,34 @@
+name: Build Brave V2 with Maia
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'feat/maia3-cinco-setas-brave'
+jobs:
+  brave-extension:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Compile extension
+        run: npm run build --workspace chessmenthol-extension
+      - name: Verify bundled assets
+        run: |
+          test -s apps/extension/.output/chrome-mv3/manifest.json
+          test -s apps/extension/.output/chrome-mv3/models/maia3_5m.onnx
+          test -s apps/extension/.output/chrome-mv3/ort/ort-wasm-simd-threaded.wasm
+          test -s apps/extension/.output/chrome-mv3/engine/stockfish-19-single.wasm
+      - name: Upload browser-ready extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChessMenthol-V2-Brave-5-Setas
+          path: apps/extension/.output/chrome-mv3/
+          if-no-files-found: error
